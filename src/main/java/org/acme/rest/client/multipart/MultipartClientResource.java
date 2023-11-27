@@ -18,10 +18,13 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import io.netty.handler.codec.http.multipart.FileUpload;
+import io.smallrye.mutiny.Uni;
 import org.apache.commons.io.IOUtils;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import org.jboss.resteasy.reactive.RestForm;
 
 @Path("/client")
 public class MultipartClientResource {
@@ -79,6 +82,34 @@ public class MultipartClientResource {
         }
 
         return Response.status(200).entity("uploadFile is called, Uploaded file name : " + fileName).build();
+
+    }
+
+
+    @POST
+    @Path("/upload2")
+    @Consumes("multipart/form-data")
+    public Uni<Response> uploadFileV2(@RestForm("uploadedFile") FileUpload fileUpload, @RestForm) {
+
+        String fileName = fileUpload.getName();
+
+        try {
+
+            // convert the uploaded file to inputstream
+            byte[] bytes = fileUpload.get();
+
+            // constructs upload file path
+            fileName = UPLOADED_FILE_PATH + fileName;
+
+            writeFile(bytes, fileName);
+
+            System.out.println("Done");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return Uni.createFrom().item(Response.status(200).entity("uploadFile v2 is called, Uploaded file name : " + fileName).build());
 
     }
 
